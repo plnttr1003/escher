@@ -51,163 +51,132 @@
 		</div>
 	</div>
 	<script>
-//==================================================================================================	
+//==================================================================================================
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 		function prepareGroup(svg) {
 				var groups = svg.querySelectorAll('#A, #B'); // передаются ID групп
 				parseGroup(groups);
 		}
-		
-//..........................................................................................	
+
+//..........................................................................................
 		function parseGroup(groups) {
 			var diff = {x:0, y:0};
 			var current = [];
 			groups.forEach(function(group) {
-					group.querySelectorAll('path').forEach(function(item) {
-							var entryPoint;
-							var prevEntryPoint;
-							var mI = 0;
-							var lI = 0;
-							var cI = 1;
-							var pathN = 0;
-							var enlarge = {
-								status : false,
-								x : 0,
-								y : 0
-							};
-							var exportString = [];
-							var inputString = item.getAttribute('d').replace(/[\n\r]/g, '')
-							inputString = inputString.replace(/\s+/g,' ');
-							inputString.split(' ').forEach(function(el) {
-									 if (el === 'M') entryPoint = 'M';
-								else if (el === 'm') entryPoint = 'm';
-								else if (el === 'L') entryPoint = 'L';
-								else if (el === 'l') entryPoint = 'l';
-								else if (el === 'C') entryPoint = 'C';
-								else if (el === 'c') entryPoint = 'c';
-								else {
-									current = el.split(',');
-									if (entryPoint === 'm' || entryPoint === 'M') {
-										enlarge.status = false;
-										cI = 1;
-										if (entryPoint === 'm') {
-											diff.x = diff.x + parseInt(current[0], 10);
-										}
-										else {
-											diff.x = parseInt(current[0], 10);
-											diff.y = parseInt(current[1], 10);										
-										}
-										if (prevEntryPoint === entryPoint)										
-										{
-											exportString[pathN] += 'X[ixy]['+ (mI === 0 ? mI = 3 : mI = 0) +']=' + diff.x + '; Y[ixy]['+ mI +']=' + diff.y + '; ';
-											if (mI === 3) {
-												exportString[pathN] += 'v[ixy]=true; ixy++;';
-												pathN++;
-												exportString[pathN] = '';
-											}
-										}
-										else {
-											exportString[pathN] = 'X[ixy][0]=' + diff.x + ';Y[ixy][0]=' + diff.y + '; ';
-										}
-									}
-									else if (entryPoint === 'c' || entryPoint === 'C') {
-										enlarge.status = true;
-										enlarge.x = cI === 1 ? diff.x : enlarge.x;
-										enlarge.y = cI === 1 ? diff.y : enlarge.y;
-										
-										if (entryPoint === 'c') {
-											diff.x = !enlarge.status ? diff.x + parseInt(current[0], 10) : enlarge.x + parseInt(current[0], 10);
-											diff.y = !enlarge.status ? diff.y + parseInt(current[1], 10) : enlarge.y + parseInt(current[1], 10);
-										}
-										else {
-											diff.x = parseInt(current[0], 10);
-											diff.y = parseInt(current[1], 10);
-										}											
-											
-										if (cI % 3 !== 0) {
-											exportString[pathN] += 'X[ixy]['+ cI +']=' + diff.x + ';Y[ixy]['+ cI +']=' + diff.y + '; ';
-											cI++;
-										}
-										else if(cI % 3 === 0) {
-											exportString[pathN] += 'X[ixy]['+ cI +']=' + diff.x + '; Y[ixy]['+ cI +']=' + diff.y + ';';
-											exportString[pathN] += 'v[ixy]=false; ixy++;';
-											pathN++;
-											exportString[pathN] = '';
-											enlarge.status = false;
-											cI = 1;
-										}
-									}
+				group.querySelectorAll('path').forEach(function(item) {
+					var entryPoint;
+					var prevEntryPoint;
+					var mI = 0;
+					var lI = 0;
+					var cI = 1;
+					var pathN = 0;
+					var enlarge = {
+						status : false,
+						x : 0,
+						y : 0
+					};
+					var exportString = [];
+					var inputString = item.getAttribute('d').replace(/[\n\r]/g, '')
+					inputString = inputString.replace(/\s+/g,' ');
+					inputString.split(' ').forEach(function(el) {
 
-									else if (entryPoint === 'l' || entryPoint === 'L') {
-										enlarge.status = false;
-										cI = 1;
-										if (entryPoint === 'l') {
-											diff.x = diff.x + parseInt(current[0], 10);
-										}
-										else {
-											diff.x = parseInt(current[0], 10);
-											diff.y = parseInt(current[1], 10);										
-										}
-										exportString[pathN] += 'X[ixy]['+ (lI === 0 ? lI = 4 : lI = 0) +']=' + current[0] + '; Y[ixy]['+ lI +']=' + current[1] + '; ';
-										if (lI === 4) {
-											exportString[pathN] += 'v[ixy]=true; ixy++;';
-											pathN++;
-											exportString[pathN] = '';
-										}
-									}
-									prevEntryPoint = entryPoint;
+						if (el === 'M') {
+							entryPoint = 'M';
+						} else if (el === 'm') {
+							entryPoint = 'm';
+						} else if (el === 'L') {
+							entryPoint = 'L';
+						} else if (el === 'l') {
+							entryPoint = 'l';
+						} else if (el === 'C') {
+							entryPoint = 'C';
+							exportString[pathN] +='C ('
+						} else if (el === 'c') {
+							entryPoint = 'c';
+							exportString[pathN] +='c ('
+						}
+						else {
+							current = el.split(',');
+
+							if (entryPoint === 'm' || entryPoint === 'M') {
+								cI = 1;
+								if (prevEntryPoint !== entryPoint) {
+									exportString[pathN] = (exportString[pathN] ? exportString[pathN] + entryPoint + ' (' + current[0] + ', ' + current[1] + '); \n' : entryPoint + ' (' + current[0] + ', ' + current[1] + '); \n');
 								}
+								else {
+									exportString[pathN] += (entryPoint === 'm' ? 'l' : 'L') + ' (' + current[0] + ', ' + current[1] + '); \n';
+								}
+							}
+							else if (entryPoint === 'c' || entryPoint === 'C') {
+								if (cI % 3 !== 0) {
+									exportString[pathN] += current[0] + ', ' + current[1] + ', ';
+									cI++;
+								}
+								else if(cI % 3 === 0) {
+									exportString[pathN] += current[0] + ', ' + current[1];
+									exportString[pathN] += ');';
+									pathN++;
+									exportString[pathN] = '';
+									cI = 1;
+								}
+							}
+							else if (entryPoint === 'l' || entryPoint === 'L') {
+								cI = 1;
+								exportString[pathN] = entryPoint + ' (' + current[0] + ', ' + current[1] + '); ';
+							}
+							prevEntryPoint = entryPoint;
+						}
 
-							});
-
-							//console.log('Путь: ' + item.getAttribute('id') + '\n' + '------------------------------------');
-							/*exportString.forEach(function(string){
-								console.log(string);
-							})*/
-							console.log(exportString.join('\n'));
-							//console.log('\n');
 					});
+
+					//console.log('Путь: ' + item.getAttribute('id') + '\n' + '------------------------------------');
+					/*exportString.forEach(function(string){
+						console.log(string);
+					})*/
+					console.log(exportString.join('\n'));
+						//console.log('\n');
+				});
 			});
 		}
 
 
 //=======================================================================================================
 		function renderSvg(code) {
-				var svgContainer = document.getElementById('svg_container');
-				svgContainer.innerHTML = code;
-				dropZone.parentNode.removeChild(dropZone);
-				prepareGroup(svgContainer.querySelector('svg'));
+			var svgContainer = document.getElementById('svg_container');
+			svgContainer.innerHTML = code;
+			dropZone.parentNode.removeChild(dropZone);
+			prepareGroup(svgContainer.querySelector('svg'));
 		}
-		
+
 		function handleFileSelect(evt) {
-				dropZone.classList.remove('dragover');
-				evt.stopPropagation();
-				evt.preventDefault();
-				var files = evt.dataTransfer.files;
-				var file = files[0];
-				var start = 0;
-				var stop = file.size - 1;
-				var reader = new FileReader();
-				reader.onloadend = function(evt) {
-						if (evt.target.readyState == FileReader.DONE) { // DONE == 2
-								document.getElementById('svg_loader').value = evt.target.result;
-								renderSvg(evt.target.result);
-						}
-				};
-				var blob = file.slice(start, stop + 1);
-				reader.readAsText(blob);
+			dropZone.classList.remove('dragover');
+			evt.stopPropagation();
+			evt.preventDefault();
+			var files = evt.dataTransfer.files;
+			var file = files[0];
+			var start = 0;
+			var stop = file.size - 1;
+			var reader = new FileReader();
+			reader.onloadend = function(evt) {
+				if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+					document.getElementById('svg_loader').value = evt.target.result;
+					renderSvg(evt.target.result);
+				}
+			};
+			var blob = file.slice(start, stop + 1);
+			reader.readAsText(blob);
 		}
 
 		function handleDragOver(evt) {
-				evt.stopPropagation();
-				evt.preventDefault();
-				evt.dataTransfer.dropEffect = 'copy';
-				dropZone.classList.add('dragover');
+			evt.stopPropagation();
+			evt.preventDefault();
+			evt.dataTransfer.dropEffect = 'copy';
+			dropZone.classList.add('dragover');
 		}
 
 		function handleDragLeave(evt) {
-				dropZone.classList.remove('dragover');
+			dropZone.classList.remove('dragover');
 		}
 
 		var dropZone = document.getElementById('drop_zone');
